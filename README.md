@@ -1,9 +1,6 @@
 # Mercado Fácil
 
 ## Sobre o trabalho
-
-Este projeto foi feito em grupo como um trabalho do segundo ano do ensino médio. A proposta era criar um sistema de caixa para supermercado que fosse simples, organizado e fácil de usar.
-
 Nós usamos HTML, CSS e JavaScript na parte visual. Também usamos Node.js para iniciar o servidor e SQLite para guardar os dados no próprio projeto.
 
 O sistema funciona no endereço:

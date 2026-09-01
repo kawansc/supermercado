@@ -1,0 +1,8 @@
+{
+  "name": "supermercado-caixa",
+  "version": "1.0.0",
+  "description": "Sistema local de supermercado",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "dev": "node server.js" },
+  "dependencies": { "better-sqlite3": "^11.7.0", "express": "^4.21.2", "express-session": "^1.18.1" }
+}

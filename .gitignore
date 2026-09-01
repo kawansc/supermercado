@@ -1,0 +1,5 @@
+node_modules/
+supermercado.db
+supermercado.db-shm
+supermercado.db-wal
+.env

@@ -62,16 +62,6 @@ button {
   font-weight: 700;
 }
 
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--green);
-  color: white;
-}
-
 .main-nav {
   display: flex;
   align-items: center;
@@ -107,65 +97,24 @@ button {
 
 .page-content {
   width: min(1100px, calc(100% - 40px));
-  min-height: calc(100vh - 145px);
+  min-height: calc(100vh - 72px);
   margin: 0 auto;
-  padding: 48px 0 64px;
+  padding: 40px 0 64px;
 }
 
-.hero {
-  display: grid;
-  grid-template-columns: 1.3fr 0.7fr;
-  align-items: center;
-  min-height: 430px;
-  gap: 50px;
+.home {
+  max-width: 700px;
+  padding: 40px 0;
 }
 
-.hero-copy {
-  max-width: 650px;
-}
-
-.eyebrow {
+.home h1 {
   margin: 0 0 12px;
-  color: var(--green);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 2rem;
 }
 
-.hero h1 {
-  margin: 0;
-  font-size: clamp(2.4rem, 6vw, 4.5rem);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
-}
-
-.hero p:not(.eyebrow) {
-  max-width: 560px;
-  margin: 22px 0 28px;
+.home p {
+  margin: 0 0 24px;
   color: var(--muted);
-  font-size: 1.1rem;
-}
-
-.hero-card {
-  padding: 30px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
-}
-
-.hero-card h2 {
-  margin-top: 0;
-}
-
-.hero-card ul {
-  margin: 0;
-  padding-left: 20px;
-  color: var(--muted);
-}
-
-.hero-card li + li {
-  margin-top: 10px;
 }
 
 .page-title {
@@ -182,7 +131,7 @@ button {
 .card,
 .panel {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 4px;
   background: var(--surface);
 }
 
@@ -255,7 +204,7 @@ select {
   width: 100%;
   padding: 11px 12px;
   border: 1px solid #c8d0cb;
-  border-radius: 7px;
+  border-radius: 4px;
   background: white;
   color: var(--ink);
 }
@@ -272,7 +221,7 @@ select:focus {
   justify-content: center;
   min-height: 42px;
   padding: 10px 16px;
-  border-radius: 7px;
+  border-radius: 4px;
   background: var(--green);
   color: white;
   font-weight: 700;
@@ -306,7 +255,7 @@ select:focus {
 .message {
   margin: 16px 0;
   padding: 12px 14px;
-  border-radius: 7px;
+  border-radius: 4px;
   background: var(--danger-light);
   color: #882f2f;
 }
@@ -337,18 +286,6 @@ select:focus {
   font-weight: 700;
 }
 
-.site-footer {
-  padding: 20px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  text-align: center;
-  font-size: 0.85rem;
-}
-
-.site-footer p {
-  margin: 0;
-}
-
 @media (max-width: 760px) {
   .header-content {
     align-items: flex-start;
@@ -362,11 +299,6 @@ select:focus {
     overflow-x: auto;
   }
 
-  .hero {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -374,7 +306,6 @@ select:focus {
 
 @media print {
   .site-header,
-  .site-footer,
   .button {
     display: none;
   }

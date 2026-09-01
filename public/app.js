@@ -66,25 +66,13 @@ function showMessage(message) {
 
 function renderHome() {
   app.innerHTML = `
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Compras do dia a dia</p>
-        <h1>Seu mercado de um jeito simples.</h1>
-        <p>
-          Consulte os produtos disponíveis, monte seu carrinho e escolha a
-          forma de pagamento.
-        </p>
-        <a class="button" href="/produtos">Ver produtos</a>
-      </div>
-
-      <aside class="hero-card">
-        <h2>Como funciona</h2>
-        <ul>
-          <li>Escolha os produtos.</li>
-          <li>Entre ou crie seu cadastro.</li>
-          <li>Finalize a compra e confira a nota fiscal.</li>
-        </ul>
-      </aside>
+    <section class="home">
+      <h1>Bem-vindo ao Mercado Fácil</h1>
+      <p>
+        Consulte os produtos disponíveis, adicione itens ao carrinho e finalize
+        sua compra.
+      </p>
+      <a class="button" href="/produtos">Ver produtos</a>
     </section>
   `;
 }

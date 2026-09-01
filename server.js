@@ -1,3 +1,5 @@
+// Servidor HTTP, rotas da API e acesso ao banco de dados local.
+
 const express = require("express");
 const session = require("express-session");
 const Database = require("better-sqlite3");

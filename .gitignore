@@ -1,5 +1,10 @@
+# Dependências instaladas pelo npm
 node_modules/
+
+# Arquivos gerados pelo banco local
 supermercado.db
 supermercado.db-shm
 supermercado.db-wal
+
+# Variáveis de ambiente locais
 .env

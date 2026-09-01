@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cadastro",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/produtos",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/pagamento",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/nota-fiscal",
+      "destination": "/index.html"
+    }
+  ]
+}

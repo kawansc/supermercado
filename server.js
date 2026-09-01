@@ -1,119 +1,48 @@
-// Servidor HTTP, rotas da API e acesso ao banco de dados local.
+// Servidor HTTP, rotas da API e acesso ao banco de dados.
 
 const express = require("express");
-const session = require("express-session");
-const Database = require("better-sqlite3");
+const cookieSession = require("cookie-session");
 const path = require("path");
+const database = require("./database");
 
 const app = express();
-const databasePath = path.join(__dirname, "supermercado.db");
-const db = new Database(databasePath);
+let databaseReady;
 
-db.pragma("journal_mode = WAL");
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    username TEXT UNIQUE,
-    cpf TEXT UNIQUE,
-    contact TEXT NOT NULL,
-    password TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'cliente'
-  );
-
-  CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    price REAL NOT NULL,
-    stock INTEGER NOT NULL DEFAULT 0
-  );
-
-  CREATE TABLE IF NOT EXISTS sales (
-    id INTEGER PRIMARY KEY,
-    user_id INTEGER,
-    items TEXT NOT NULL,
-    total REAL NOT NULL,
-    payment TEXT NOT NULL,
-    created_at TEXT NOT NULL
-  );
-`);
-
-const userColumns = db.prepare("PRAGMA table_info(users)").all();
-const hasUsernameColumn = userColumns.some((column) => column.name === "username");
-
-if (!hasUsernameColumn) {
-  db.exec("ALTER TABLE users ADD COLUMN username TEXT");
-}
-
-db.exec(`
-  CREATE UNIQUE INDEX IF NOT EXISTS users_username_index
-  ON users (username);
-`);
-
-function createInitialData() {
-  const admin = db
-    .prepare("SELECT id FROM users WHERE role = 'admin' LIMIT 1")
-    .get();
-
-  if (admin) {
-    db.prepare("UPDATE users SET username = ? WHERE id = ?").run("adminS", admin.id);
-  } else {
-    const cpfColumn = userColumns.find((column) => column.name === "cpf");
-    const adminCpf = cpfColumn?.notnull ? "ADMIN" : null;
-
-    db.prepare(`
-      INSERT INTO users (name, username, cpf, contact, password, role)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      "Administrador",
-      "adminS",
-      adminCpf,
-      "admin@mercado.local",
-      "admin123",
-      "admin",
-    );
+function initializeDatabase() {
+  if (!databaseReady) {
+    databaseReady = database.initialize();
   }
 
-  const firstProduct = db.prepare("SELECT id FROM products LIMIT 1").get();
-
-  if (!firstProduct) {
-    const insertProduct = db.prepare(`
-      INSERT INTO products (name, price, stock)
-      VALUES (?, ?, ?)
-    `);
-
-    const initialProducts = [
-      ["Arroz 5kg", 28.9, 20],
-      ["Feijão 1kg", 8.49, 35],
-      ["Leite integral", 5.99, 40],
-      ["Café 500g", 18.5, 18],
-      ["Macarrão 500g", 5.25, 50],
-    ];
-
-    initialProducts.forEach((product) => {
-      insertProduct.run(...product);
-    });
-  }
+  return databaseReady;
 }
-
-createInitialData();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
-  session({
-    secret: "supermercado-local-2026",
-    resave: false,
-    saveUninitialized: false,
+  cookieSession({
+    name: "mercado_session",
+    keys: [process.env.SESSION_SECRET || "mercado-local-2026"],
+    maxAge: 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: Boolean(process.env.VERCEL),
   }),
 );
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.use(async (request, response, next) => {
+  try {
+    await initializeDatabase();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 function requireLogin(request, response, next) {
-  if (!request.session.user) {
+  if (!request.session?.user) {
     return response.status(401).json({
       error: "Faça login para continuar.",
     });
@@ -123,7 +52,7 @@ function requireLogin(request, response, next) {
 }
 
 function requireAdmin(request, response, next) {
-  if (request.session.user?.role !== "admin") {
+  if (request.session?.user?.role !== "admin") {
     return response.status(403).json({
       error: "Acesso permitido somente a administradores.",
     });
@@ -134,65 +63,83 @@ function requireAdmin(request, response, next) {
 
 app.get("/api/session", (request, response) => {
   response.json({
-    user: request.session.user || null,
+    user: request.session?.user || null,
   });
 });
 
-app.get("/api/products", (request, response) => {
-  const products = db.prepare("SELECT * FROM products ORDER BY name").all();
-  response.json(products);
-});
-
-app.post("/api/products", requireLogin, requireAdmin, (request, response) => {
-  const { name, price, stock } = request.body;
-  const numericPrice = Number(price);
-  const numericStock = Number(stock);
-
-  const invalidProduct =
-    !name?.trim() ||
-    !Number.isFinite(numericPrice) ||
-    numericPrice <= 0 ||
-    !Number.isInteger(numericStock) ||
-    numericStock < 0;
-
-  if (invalidProduct) {
-    return response.status(400).json({
-      error: "Preencha os dados do produto corretamente.",
-    });
+app.get("/api/products", async (request, response, next) => {
+  try {
+    const products = await database.listProducts();
+    response.json(products);
+  } catch (error) {
+    next(error);
   }
-
-  const result = db
-    .prepare(`
-      INSERT INTO products (name, price, stock)
-      VALUES (?, ?, ?)
-    `)
-    .run(name.trim(), numericPrice, numericStock);
-
-  response.status(201).json({
-    id: result.lastInsertRowid,
-  });
 });
+
+app.post(
+  "/api/products",
+  requireLogin,
+  requireAdmin,
+  async (request, response, next) => {
+    const { name, price, stock } = request.body;
+    const numericPrice = Number(price);
+    const numericStock = Number(stock);
+
+    const invalidProduct =
+      !name?.trim() ||
+      !Number.isFinite(numericPrice) ||
+      numericPrice <= 0 ||
+      !Number.isInteger(numericStock) ||
+      numericStock < 0;
+
+    if (invalidProduct) {
+      return response.status(400).json({
+        error: "Preencha os dados do produto corretamente.",
+      });
+    }
+
+    try {
+      const id = await database.createProduct(
+        name.trim(),
+        numericPrice,
+        numericStock,
+      );
+
+      response.status(201).json({ id });
+    } catch (error) {
+      if (error.message.toLowerCase().includes("unique")) {
+        return response.status(400).json({
+          error: "Já existe um produto com esse nome.",
+        });
+      }
+
+      next(error);
+    }
+  },
+);
 
 app.delete(
   "/api/products/:id",
   requireLogin,
   requireAdmin,
-  (request, response) => {
-    const result = db
-      .prepare("DELETE FROM products WHERE id = ?")
-      .run(request.params.id);
+  async (request, response, next) => {
+    try {
+      const deleted = await database.deleteProduct(request.params.id);
 
-    if (!result.changes) {
-      return response.status(404).json({
-        error: "Produto não encontrado.",
-      });
+      if (!deleted) {
+        return response.status(404).json({
+          error: "Produto não encontrado.",
+        });
+      }
+
+      response.status(204).end();
+    } catch (error) {
+      next(error);
     }
-
-    response.status(204).end();
   },
 );
 
-app.post("/api/register", (request, response) => {
+app.post("/api/register", async (request, response, next) => {
   const { name, cpf, contact, password } = request.body;
   const cleanCpf = (cpf || "").replace(/\D/g, "");
 
@@ -203,15 +150,15 @@ app.post("/api/register", (request, response) => {
   }
 
   try {
-    const result = db
-      .prepare(`
-        INSERT INTO users (name, cpf, contact, password, role)
-        VALUES (?, ?, ?, ?, 'cliente')
-      `)
-      .run(name.trim(), cleanCpf, contact.trim(), password);
+    const id = await database.createCustomer(
+      name.trim(),
+      cleanCpf,
+      contact.trim(),
+      password,
+    );
 
     request.session.user = {
-      id: result.lastInsertRowid,
+      id,
       name: name.trim(),
       role: "cliente",
     };
@@ -220,48 +167,52 @@ app.post("/api/register", (request, response) => {
       user: request.session.user,
     });
   } catch (error) {
-    response.status(400).json({
-      error: "CPF já cadastrado.",
-    });
+    if (
+      error.message.toLowerCase().includes("unique") ||
+      error.message.toLowerCase().includes("cpf")
+    ) {
+      return response.status(400).json({
+        error: "CPF já cadastrado.",
+      });
+    }
+
+    next(error);
   }
 });
 
-app.post("/api/login", (request, response) => {
+app.post("/api/login", async (request, response, next) => {
   const login = (request.body.login || "").trim();
   const cleanCpf = login.replace(/\D/g, "");
 
-  const user = db
-    .prepare(`
-      SELECT id, name, role, password
-      FROM users
-      WHERE username = ? OR cpf = ?
-    `)
-    .get(login, cleanCpf || null);
+  try {
+    const user = await database.findUserByLogin(login, cleanCpf || null);
 
-  if (!user || user.password !== request.body.password) {
-    return response.status(401).json({
-      error: "CPF ou senha inválidos.",
+    if (!user || user.password !== request.body.password) {
+      return response.status(401).json({
+        error: "Usuário, CPF ou senha inválidos.",
+      });
+    }
+
+    request.session.user = {
+      id: user.id,
+      name: user.name,
+      role: user.role,
+    };
+
+    response.json({
+      user: request.session.user,
     });
+  } catch (error) {
+    next(error);
   }
-
-  request.session.user = {
-    id: user.id,
-    name: user.name,
-    role: user.role,
-  };
-
-  response.json({
-    user: request.session.user,
-  });
 });
 
 app.post("/api/logout", (request, response) => {
-  request.session.destroy(() => {
-    response.status(204).end();
-  });
+  request.session = null;
+  response.status(204).end();
 });
 
-app.post("/api/checkout", requireLogin, (request, response) => {
+app.post("/api/checkout", requireLogin, async (request, response, next) => {
   const { items, payment } = request.body;
   const paymentMethods = ["pix", "credito", "debito", "dinheiro"];
 
@@ -271,64 +222,12 @@ app.post("/api/checkout", requireLogin, (request, response) => {
     });
   }
 
-  const findProduct = db.prepare("SELECT * FROM products WHERE id = ?");
-  const updateStock = db.prepare(`
-    UPDATE products
-    SET stock = stock - ?
-    WHERE id = ?
-  `);
-  const insertSale = db.prepare(`
-    INSERT INTO sales (user_id, items, total, payment, created_at)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-
-  const processSale = db.transaction(() => {
-    let total = 0;
-    const invoiceItems = [];
-
-    for (const item of items) {
-      const product = findProduct.get(item.id);
-      const quantity = Number(item.quantity);
-
-      if (!product) {
-        throw new Error("Produto não encontrado.");
-      }
-
-      if (!Number.isInteger(quantity) || quantity < 1 || product.stock < quantity) {
-        throw new Error(`Estoque insuficiente para ${product.name}.`);
-      }
-
-      const subtotal = product.price * quantity;
-      total += subtotal;
-
-      invoiceItems.push({
-        name: product.name,
-        quantity,
-        price: product.price,
-        subtotal,
-      });
-
-      updateStock.run(quantity, product.id);
-    }
-
-    const createdAt = new Date().toISOString();
-    const result = insertSale.run(
-      request.session.user.id,
-      JSON.stringify(invoiceItems),
-      total,
-      payment,
-      createdAt,
-    );
-
-    return {
-      id: result.lastInsertRowid,
-      items: invoiceItems,
-      total,
-    };
-  });
-
   try {
-    const sale = processSale();
+    const sale = await database.processSale(
+      request.session.user.id,
+      items,
+      payment,
+    );
 
     response.status(201).json({
       id: sale.id,
@@ -339,9 +238,19 @@ app.post("/api/checkout", requireLogin, (request, response) => {
       date: new Date().toLocaleString("pt-BR"),
     });
   } catch (error) {
-    response.status(400).json({
-      error: error.message,
-    });
+    const expectedError =
+      error.message.includes("Produto não encontrado") ||
+      error.message.includes("Estoque insuficiente") ||
+      error.message.includes("Quantidade inválida") ||
+      error.message.includes("Carrinho vazio");
+
+    if (expectedError) {
+      return response.status(400).json({
+        error: error.message,
+      });
+    }
+
+    next(error);
   }
 });
 
@@ -360,6 +269,23 @@ siteRoutes.forEach((route) => {
   });
 });
 
-app.listen(3000, "127.0.0.1", () => {
-  console.log("Supermercado em http://127.0.0.1:3000");
+app.use((error, request, response, next) => {
+  console.error(error);
+
+  const missingConfiguration = error.message.includes("DATABASE_URL");
+
+  response.status(500).json({
+    error:
+      process.env.NODE_ENV === "production" && !missingConfiguration
+        ? "Não foi possível acessar o servidor."
+        : error.message,
+  });
 });
+
+if (!process.env.VERCEL) {
+  app.listen(3000, "127.0.0.1", () => {
+    console.log("Supermercado em http://127.0.0.1:3000");
+  });
+}
+
+module.exports = app;

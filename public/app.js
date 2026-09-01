@@ -1,3 +1,5 @@
+// Comportamento da interface, do carrinho e da comunicação com a API.
+
 const app = document.querySelector("#app");
 const accountLink = document.querySelector("#account");
 const logoutButton = document.querySelector("#logout");

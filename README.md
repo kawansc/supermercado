@@ -4,7 +4,7 @@
 
 Este projeto foi feito em grupo como um trabalho do segundo ano do ensino médio. A proposta era criar um sistema de caixa para supermercado que fosse simples, organizado e fácil de usar.
 
-Nós usamos HTML, CSS e JavaScript na parte visual. Também usamos Node.js para iniciar o servidor e SQLite para guardar os dados no próprio projeto.
+Nós usamos HTML, CSS e JavaScript na parte visual. Também usamos Node.js para iniciar o servidor. No computador, os dados ficam no SQLite. Na versão publicada no Vercel, os dados ficam em um banco PostgreSQL da Neon.
 
 O sistema funciona no endereço:
 
@@ -93,7 +93,9 @@ O administrador entra com um usuário próprio. Depois do login, aparecem as op�
 | `public/style.css` | Cuida das cores, tamanhos, espaços e aparência das páginas. |
 | `public/app.js` | Controla os formulários, as páginas e o carrinho. |
 | `server.js` | Inicia o servidor e faz a ligação com o banco de dados. |
+| `database.js` | Escolhe o banco local ou online e faz as operações com os dados. |
 | `package.json` | Guarda as dependências e os comandos do projeto. |
+| `vercel.json` | Configura as páginas quando o projeto está publicado no Vercel. |
 | `.gitignore` | Evita que arquivos locais sejam enviados para o GitHub. |
 | `README.md` | Explica o projeto e ensina como executar. |
 | `supermercado.db` | Guarda os usuários, produtos e vendas no computador. |
@@ -119,6 +121,8 @@ O computador usado no começo não tinha Node.js e npm instalados. Para continua
 ## O que deu certo
 
 O uso do SQLite facilitou bastante porque não foi necessário instalar um programa separado para o banco de dados. Os dados ficam guardados em um único arquivo.
+
+Para publicar no Vercel, mantivemos o SQLite na versão local e adicionamos um banco online. Isso foi necessário porque o Vercel não salva arquivos de banco de forma permanente.
 
 Também foi importante conferir o estoque e os preços no servidor. Dessa forma, a compra não depende apenas das informações que estão no navegador.
 
@@ -176,6 +180,14 @@ npm start
 ```
 
 Depois, abra a porta `3000` na parte de portas do Codespaces.
+
+## Como publicar no Vercel
+
+No painel do projeto no Vercel, abra a opção `Storage` e adicione o banco `Neon Postgres`. Conecte o banco ao projeto e confira se a variável `DATABASE_URL` foi criada.
+
+Depois disso, faça uma nova implantação do projeto. Na primeira abertura, as tabelas, a conta administrativa e os produtos iniciais serão criados automaticamente.
+
+Também é recomendado criar uma variável chamada `SESSION_SECRET` nas configurações do projeto. O valor pode ser uma frase longa que será usada para proteger a sessão de login.
 
 ## Acesso do administrador
 

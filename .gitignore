@@ -8,3 +8,6 @@ supermercado.db-wal
 
 # Variáveis de ambiente locais
 .env
+
+# Configuração local criada pelo Vercel
+.vercel/

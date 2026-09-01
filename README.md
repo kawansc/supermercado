@@ -1,3 +1,5 @@
+<!-- Documentação de uso e funcionamento do projeto. -->
+
 # Mercado Fácil
 
 ## Sobre o projeto

@@ -13,7 +13,8 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    cpf TEXT UNIQUE NOT NULL,
+    username TEXT UNIQUE,
+    cpf TEXT UNIQUE,
     contact TEXT NOT NULL,
     password TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'cliente'
@@ -36,18 +37,36 @@ db.exec(`
   );
 `);
 
+const userColumns = db.prepare("PRAGMA table_info(users)").all();
+const hasUsernameColumn = userColumns.some((column) => column.name === "username");
+
+if (!hasUsernameColumn) {
+  db.exec("ALTER TABLE users ADD COLUMN username TEXT");
+}
+
+db.exec(`
+  CREATE UNIQUE INDEX IF NOT EXISTS users_username_index
+  ON users (username);
+`);
+
 function createInitialData() {
   const admin = db
-    .prepare("SELECT id FROM users WHERE cpf = ?")
-    .get("00000000000");
+    .prepare("SELECT id FROM users WHERE role = 'admin' LIMIT 1")
+    .get();
 
-  if (!admin) {
+  if (admin) {
+    db.prepare("UPDATE users SET username = ? WHERE id = ?").run("adminS", admin.id);
+  } else {
+    const cpfColumn = userColumns.find((column) => column.name === "cpf");
+    const adminCpf = cpfColumn?.notnull ? "ADMIN" : null;
+
     db.prepare(`
-      INSERT INTO users (name, cpf, contact, password, role)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (name, username, cpf, contact, password, role)
+      VALUES (?, ?, ?, ?, ?, ?)
     `).run(
       "Administrador",
-      "00000000000",
+      "adminS",
+      adminCpf,
       "admin@mercado.local",
       "admin123",
       "admin",
@@ -206,15 +225,16 @@ app.post("/api/register", (request, response) => {
 });
 
 app.post("/api/login", (request, response) => {
-  const cleanCpf = (request.body.cpf || "").replace(/\D/g, "");
+  const login = (request.body.login || "").trim();
+  const cleanCpf = login.replace(/\D/g, "");
 
   const user = db
     .prepare(`
       SELECT id, name, role, password
       FROM users
-      WHERE cpf = ?
+      WHERE username = ? OR cpf = ?
     `)
-    .get(cleanCpf);
+    .get(login, cleanCpf || null);
 
   if (!user || user.password !== request.body.password) {
     return response.status(401).json({

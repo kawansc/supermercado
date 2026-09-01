@@ -10,4 +10,4 @@ Sistema de caixa de supermercado executado localmente em `http://127.0.0.1:3000`
 
 Rotas: `/`, `/produtos`, `/login`, `/cadastro`, `/pagamento` e `/nota-fiscal`.
 
-O banco de dados local SQLite é criado automaticamente em `supermercado.db`. Há uma conta administrativa inicial: CPF `00000000000`, senha `admin123`. Administradores podem adicionar e excluir produtos; clientes só podem consultar e comprar.
+O banco de dados local SQLite é criado automaticamente em `supermercado.db`. Há uma conta administrativa inicial: usuário `adminS`, senha `admin123`. Administradores podem adicionar e excluir produtos; clientes só podem consultar e comprar.

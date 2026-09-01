@@ -270,17 +270,27 @@ function renderAuthPage(isRegister) {
       `
     : "";
 
+  const loginField = isRegister
+    ? `
+        <div class="field">
+          <label for="cpf">CPF</label>
+          <input id="cpf" name="cpf" inputmode="numeric" required />
+        </div>
+      `
+    : `
+        <div class="field">
+          <label for="login">Usuário ou CPF</label>
+          <input id="login" name="login" autocomplete="username" required />
+        </div>
+      `;
+
   app.innerHTML = `
     <section class="panel">
       <h1>${title}</h1>
 
       <form id="authForm">
         ${registerFields}
-
-        <div class="field">
-          <label for="cpf">CPF</label>
-          <input id="cpf" name="cpf" inputmode="numeric" required />
-        </div>
+        ${loginField}
 
         <div class="field">
           <label for="password">Senha</label>
@@ -299,15 +309,6 @@ function renderAuthPage(isRegister) {
         </a>
       </p>
 
-      ${
-        isRegister
-          ? ""
-          : `
-              <p class="helper-text">
-                Administrador: CPF 00000000000 · senha admin123
-              </p>
-            `
-      }
     </section>
   `;
 

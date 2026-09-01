@@ -1,1 +1,40 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Mercado Fácil</title><link rel="stylesheet" href="/style.css"></head><body><header><a class="brand" href="/">Mercado Fácil</a><nav><a href="/">Início</a><a href="/produtos">Produtos</a><a href="/pagamento">Pagamento <span id="cartCount">0</span></a><a id="account" href="/login">Entrar</a><button id="logout" hidden>Sair</button></nav></header><main id="app"></main><footer>Mercado Fácil · Sistema de caixa local</footer><script src="/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Sistema local para compras e controle de produtos de supermercado." />
+    <title>Mercado Fácil</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-content">
+        <a class="brand" href="/" aria-label="Página inicial do Mercado Fácil">
+          <span class="brand-mark">M</span>
+          <span>Mercado Fácil</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a href="/">Início</a>
+          <a href="/produtos">Produtos</a>
+          <a href="/pagamento">
+            Carrinho
+            <span id="cartCount" class="cart-count">0</span>
+          </a>
+          <a id="account" href="/login">Entrar</a>
+          <button id="logout" class="text-button" type="button" hidden>Sair</button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="app" class="page-content"></main>
+
+    <footer class="site-footer">
+      <p>Mercado Fácil · Sistema de caixa local</p>
+    </footer>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

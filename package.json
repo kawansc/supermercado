@@ -1,15 +1,19 @@
 {
   "name": "supermercado-caixa",
   "version": "1.0.0",
-  "description": "Sistema local de supermercado",
+  "description": "Sistema de supermercado para uso local e no Vercel",
   "main": "server.js",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.7.0",
-    "express": "^4.21.2",
-    "express-session": "^1.18.1"
+    "@neondatabase/serverless": "^1.1.0",
+    "better-sqlite3": "^13.0.3",
+    "cookie-session": "^2.1.1",
+    "express": "^4.21.2"
   }
 }
